@@ -63,6 +63,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.meubolso.container
+import app.meubolso.BuildConfig
 import app.meubolso.data.SampleData
 import app.meubolso.data.db.Transaction
 import app.meubolso.data.db.TxType
@@ -343,7 +344,7 @@ private fun SampleDataPrompt() {
                         c.categories.ensureDefaults()
                         c.wallets.ensureDefaults()
                         c.shopping.ensureDefaultSections()
-                        SampleData.insert(c.db)
+                        SampleData.insert(c.db, allWallets = BuildConfig.DEMO)
                         c.settings.setSampleAnswered()
                     }
                 }) { Text("Sim, mostrar exemplo") }

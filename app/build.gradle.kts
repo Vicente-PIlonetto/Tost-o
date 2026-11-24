@@ -17,6 +17,7 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         androidResources.localeFilters += listOf("pt-rBR", "pt")
+        buildConfigField("boolean", "DEMO", "false")
     }
 
     buildTypes {
@@ -30,6 +31,13 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Uso pessoal (fora da Play Store): assina com a chave de debug para instalar direto.
             signingConfig = signingConfigs.getByName("debug")
+        }
+        // Versão para prints e vídeo: instala ao lado da normal e o exemplo traz cartão e vale.
+        create("demo") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".demo"
+            matchingFallbacks += listOf("release")
+            buildConfigField("boolean", "DEMO", "true")
         }
     }
     compileOptions {

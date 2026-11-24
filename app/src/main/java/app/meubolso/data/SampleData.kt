@@ -16,6 +16,11 @@ import app.meubolso.data.db.Purchase
 import app.meubolso.data.db.ShoppingItem
 import kotlinx.coroutines.flow.first
 import kotlin.random.Random
+import app.meubolso.data.db.Wallet
+import app.meubolso.data.db.WalletKind
+import app.meubolso.data.db.WalletTransfer
+import app.meubolso.domain.Invoice
+import app.meubolso.domain.WalletCycle
 
 /** Dados de exemplo (marcados com isSample) para conhecer o app. Podem ser apagados em Ajustes. */
 object SampleData {
@@ -47,7 +52,11 @@ object SampleData {
         for (n in listOf("Arroz", "Detergente")) dao.itemByName(n)?.let { dao.insertEntry(ListEntry(itemId = it.id)) }
     }
 
-    suspend fun insert(db: AppDatabase, today: LocalDate = LocalDate.now()) {
+    /**
+     * [allWallets]: também cria um cartão e um vale e distribui os gastos entre as carteiras.
+     * Só na versão de demonstração (prints e vídeo), porque essas carteiras não são apagadas com o exemplo.
+     */
+    suspend fun insert(db: AppDatabase, today: LocalDate = LocalDate.now(), allWallets: Boolean = false) {
         val cats = db.categories().getAll().filter { !it.archived }
         fun cat(type: TxType, name: String) = cats.first { it.type == type && it.name == name }.id
         val rnd = Random(42)
@@ -73,6 +82,23 @@ object SampleData {
             dueDay = (today.dayOfMonth + 5).coerceAtMost(28), anchorMonth = thisMonth, paymentMethod = PaymentMethod.PIX, isSample = true))
         db.bills().insert(Bill(name = "IPVA", amount = 120000, categoryId = cat(TxType.EXPENSE, "Transporte"), dueDay = 15,
             intervalMonths = 12, anchorMonth = YearMonth.of(today.year + if (today.monthValue > 3) 1 else 0, 3), isSample = true))
+
+        var card: Wallet? = null
+        var voucher: Wallet? = null
+        var account: Wallet? = null
+        if (allWallets) {
+            val wd = db.wallets()
+            val existing = wd.getAll()
+            account = existing.firstOrNull { it.kind == WalletKind.ACCOUNT }?.copy(initialBalance = 180000)?.also { wd.update(it) }
+            existing.firstOrNull { it.kind == WalletKind.CASH }?.let { wd.update(it.copy(initialBalance = 15000)) }
+            val sort = wd.maxSort()
+            card = Wallet(name = "Cartão de crédito", kind = WalletKind.CREDIT_CARD, limitAmount = 300000,
+                closingDay = 3, dueDay = 10, color = DefaultWallets.CARD_COLOR, sortOrder = sort + 1)
+                .let { it.copy(id = wd.insert(it)) }
+            voucher = Wallet(name = "Vale-refeição", kind = WalletKind.VOUCHER, limitAmount = 80000,
+                rechargeDay = 1, color = DefaultWallets.VOUCHER_COLOR, sortOrder = sort + 2)
+                .let { it.copy(id = wd.insert(it)) }
+        }
 
         val expenses = listOf(
             Triple("Mercado", "Assaí", 18000L..42000L),
@@ -105,17 +131,38 @@ object SampleData {
             val list = mutableListOf<Transaction>()
             repeat((lastDay / 2).coerceAtLeast(1)) {
                 val (name, desc, range) = expenses[rnd.nextInt(expenses.size)]
+                var payment: PaymentMethod? = listOf(PaymentMethod.PIX, PaymentMethod.DEBITO, PaymentMethod.DINHEIRO)[rnd.nextInt(3)]
+                var walletId: Long? = null
+                if (card != null && voucher != null) {
+                    when {
+                        name == "Alimentação fora" || (name == "Mercado" && rnd.nextBoolean()) -> { walletId = voucher.id; payment = null }
+                        name in setOf("Compras", "Lazer", "Transporte") || rnd.nextInt(3) == 0 -> { walletId = card.id; payment = PaymentMethod.CARTAO }
+                    }
+                }
                 list += Transaction(
                     type = TxType.EXPENSE, amount = rnd.nextLong(range.first, range.last),
                     categoryId = cat(TxType.EXPENSE, name), date = day(rnd.nextInt(1, lastDay + 1)),
                     description = desc,
-                    paymentMethod = listOf(PaymentMethod.PIX, PaymentMethod.DEBITO, PaymentMethod.DINHEIRO)[rnd.nextInt(3)],
+                    paymentMethod = payment, walletId = walletId,
                     isSample = true,
                 )
             }
             txDao.insertAll(list)
         }
         insertShopping(db, today)
+
+        // Faturas já vencidas foram pagas com a conta; fica a fechada a pagar e a aberta.
+        if (card != null && account != null) {
+            val perInvoice = mutableMapOf<Invoice, Long>()
+            txDao.getRange(today.minusYears(1), today.plusDays(1)).filter { it.walletId == card.id }.forEach {
+                val inv = WalletCycle.invoiceFor(it.date, card.closingDay, card.dueDay)
+                perInvoice[inv] = (perInvoice[inv] ?: 0L) + it.amount
+            }
+            perInvoice.filterKeys { it.due.isBefore(today) }.forEach { (inv, total) ->
+                db.wallets().insertTransfer(WalletTransfer(fromWalletId = account.id, toWalletId = card.id,
+                    amount = total, date = inv.due, note = "Pagamento da fatura"))
+            }
+        }
 
         // Limites de exemplo para mostrar as barras de progresso.
         db.categories().getAll().filter { it.type == TxType.EXPENSE && it.name in setOf("Mercado", "Alimentação fora", "Lazer") }
