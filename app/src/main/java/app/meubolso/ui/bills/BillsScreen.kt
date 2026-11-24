@@ -161,12 +161,12 @@ private fun TotalsCard(s: BillsState) {
         Row(Modifier.padding(18.dp)) {
             Column(Modifier.weight(1f)) {
                 Text("Todas as contas", style = MaterialTheme.typography.labelMedium)
-                Text(Money.format(monthly) + "/mês", style = MaterialTheme.typography.titleLarge)
+                Text(perMonth(Money.format(monthly)), style = MaterialTheme.typography.titleLarge, maxLines = 1, softWrap = false)
                 Text(Money.format(yearly) + "/ano", style = MaterialTheme.typography.bodySmall)
             }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                 Text("Só assinaturas", style = MaterialTheme.typography.labelMedium)
-                Text(Money.format(s.totals.subsMonthly) + "/mês", style = MaterialTheme.typography.titleMedium)
+                Text(perMonth(Money.format(s.totals.subsMonthly)), style = MaterialTheme.typography.titleMedium, maxLines = 1, softWrap = false)
                 Text(Money.format(s.totals.subsYearly) + "/ano", style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -406,4 +406,12 @@ private fun IncomesTab(s: BillsState, contentPadding: PaddingValues, onEdit: (Re
             }
         }
     }
+}
+
+/** "R$ 1.986,70/mês" com o "/mês" menor, para o valor caber numa linha. */
+private fun perMonth(value: String) = androidx.compose.ui.text.buildAnnotatedString {
+    append(value)
+    pushStyle(androidx.compose.ui.text.SpanStyle(fontSize = androidx.compose.ui.unit.TextUnit(0.6f, androidx.compose.ui.unit.TextUnitType.Em)))
+    append("/mês")
+    pop()
 }

@@ -103,7 +103,7 @@ private data class Tab(val route: String, val label: String, val icon: ImageVect
 
 private val tabs = listOf(
     Tab("home", "Início", Icons.Filled.Home, Icons.Outlined.Home),
-    Tab("transactions", "Movimentações", Icons.AutoMirrored.Filled.ReceiptLong, Icons.AutoMirrored.Outlined.ReceiptLong),
+    Tab("transactions", "Extrato", Icons.AutoMirrored.Filled.ReceiptLong, Icons.AutoMirrored.Outlined.ReceiptLong),
     Tab("bills", "Contas", Icons.Filled.EventRepeat, Icons.Outlined.EventRepeat),
     Tab("shopping", "Compras", Icons.Filled.ShoppingCart, Icons.Outlined.ShoppingCart),
 )

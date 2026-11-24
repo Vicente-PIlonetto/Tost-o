@@ -76,7 +76,7 @@ object SampleData {
         db.bills().insert(Bill(name = "Netflix", amount = 4490, categoryId = cat(TxType.EXPENSE, "Assinaturas"),
             dueDay = (today.dayOfMonth + 2).coerceAtMost(28), anchorMonth = thisMonth, paymentMethod = PaymentMethod.DEBITO,
             keywords = "NETFLIX", isSubscription = true, isSample = true))
-        db.bills().insert(Bill(name = "Spotify", amount = 2190, categoryId = cat(TxType.EXPENSE, "Assinaturas"), dueDay = 20,
+        db.bills().insert(Bill(name = "Spotify", amount = 2190, categoryId = cat(TxType.EXPENSE, "Assinaturas"), dueDay = (today.dayOfMonth + 4).coerceAtMost(28),
             anchorMonth = thisMonth, keywords = "SPOTIFY", isSubscription = true, isSample = true))
         db.bills().insert(Bill(name = "Internet", amount = 9990, categoryId = cat(TxType.EXPENSE, "Contas da casa"),
             dueDay = (today.dayOfMonth + 5).coerceAtMost(28), anchorMonth = thisMonth, paymentMethod = PaymentMethod.PIX, isSample = true))
@@ -89,14 +89,13 @@ object SampleData {
         if (allWallets) {
             val wd = db.wallets()
             val existing = wd.getAll()
-            account = existing.firstOrNull { it.kind == WalletKind.ACCOUNT }?.copy(initialBalance = 180000)?.also { wd.update(it) }
-            existing.firstOrNull { it.kind == WalletKind.CASH }?.let { wd.update(it.copy(initialBalance = 15000)) }
-            val sort = wd.maxSort()
-            card = Wallet(name = "Cartão de crédito", kind = WalletKind.CREDIT_CARD, limitAmount = 300000,
-                closingDay = 3, dueDay = 10, color = DefaultWallets.CARD_COLOR, sortOrder = sort + 1)
+            account = existing.firstOrNull { it.kind == WalletKind.ACCOUNT }?.copy(initialBalance = 0)?.also { wd.update(it) }
+            existing.firstOrNull { it.kind == WalletKind.CASH }?.let { wd.update(it.copy(initialBalance = 60000, sortOrder = 3)) }
+                        card = Wallet(name = "Cartão de crédito", kind = WalletKind.CREDIT_CARD, limitAmount = 300000,
+                closingDay = 3, dueDay = 10, color = DefaultWallets.CARD_COLOR, sortOrder = 1)
                 .let { it.copy(id = wd.insert(it)) }
             voucher = Wallet(name = "Vale-refeição", kind = WalletKind.VOUCHER, limitAmount = 80000,
-                rechargeDay = 1, color = DefaultWallets.VOUCHER_COLOR, sortOrder = sort + 2)
+                rechargeDay = 1, color = DefaultWallets.VOUCHER_COLOR, sortOrder = 2)
                 .let { it.copy(id = wd.insert(it)) }
         }
 
@@ -131,7 +130,8 @@ object SampleData {
             val list = mutableListOf<Transaction>()
             repeat((lastDay / 2).coerceAtLeast(1)) {
                 val (name, desc, range) = expenses[rnd.nextInt(expenses.size)]
-                var payment: PaymentMethod? = listOf(PaymentMethod.PIX, PaymentMethod.DEBITO, PaymentMethod.DINHEIRO)[rnd.nextInt(3)]
+                var payment: PaymentMethod? = if (allWallets) listOf(PaymentMethod.PIX, PaymentMethod.DEBITO, PaymentMethod.PIX, PaymentMethod.DEBITO, PaymentMethod.DINHEIRO)[rnd.nextInt(5)]
+                    else listOf(PaymentMethod.PIX, PaymentMethod.DEBITO, PaymentMethod.DINHEIRO)[rnd.nextInt(3)]
                 var walletId: Long? = null
                 if (card != null && voucher != null) {
                     when {
