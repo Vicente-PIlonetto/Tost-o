@@ -1,0 +1,46 @@
+name: Relatar um erro
+description: Algo não funciona como deveria.
+labels: ["erro"]
+body:
+  - type: markdown
+    attributes:
+      value: "Obrigado por avisar. Quanto mais detalhes, mais rápido dá para corrigir. Não coloque senhas nem dados pessoais."
+  - type: textarea
+    id: oque
+    attributes:
+      label: O que aconteceu
+      description: Descreva o problema.
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como reproduzir
+      placeholder: |
+        1. Abra Contas
+        2. Toque em Calendário
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que você esperava
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do app
+      description: "No Android: Configurações > Apps > Tostão."
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: aparelho
+    attributes:
+      label: Celular e versão do Android
+      placeholder: "Redmi Note 9S, Android 12"
+  - type: textarea
+    id: prints
+    attributes:
+      label: Prints ou vídeo
+      description: Arraste os arquivos para cá.
