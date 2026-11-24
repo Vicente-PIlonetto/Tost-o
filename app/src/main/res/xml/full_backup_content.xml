@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 e anteriores: Auto Backup no Google Drive. -->
+<full-backup-content>
+    <include domain="database" path="meubolso.db" />
+    <include domain="database" path="meubolso.db-wal" />
+    <include domain="database" path="meubolso.db-shm" />
+    <include domain="file" path="datastore/" />
+    <include domain="sharedpref" path="." />
+</full-backup-content>

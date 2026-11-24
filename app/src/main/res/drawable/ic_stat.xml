@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone monocromático da barra de status: carteira. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M5,6h12a1,1 0,0 1,1 1v1h-13a1,1 0,0 1,0 -2zM4,9h16a1,1 0,0 1,1 1v8a1,1 0,0 1,-1 1h-16a1,1 0,0 1,-1 -1v-8a1,1 0,0 1,1 -1zM15,12a2,2 0,0 0,0 4h5v-4z" />
+</vector>
